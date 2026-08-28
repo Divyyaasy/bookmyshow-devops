@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bookmyshow-backend
+  labels:
+    app: bookmyshow-backend
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: bookmyshow-backend
+
+  template:
+    metadata:
+      labels:
+        app: bookmyshow-backend
+
+    spec:
+      containers:
+        - name: bookmyshow-backend
+          image: 858688938415.dkr.ecr.ap-south-1.amazonaws.com/bookmyshow-backend:1.1
+
+          ports:
+            - containerPort: 8080
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 20
