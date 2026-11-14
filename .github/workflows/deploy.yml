@@ -16,24 +16,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checkout source code
       - name: Checkout source code
         uses: actions/checkout@v4
 
+      # 2. Setup Java
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
+      # 3. Build Spring Boot application
       - name: Build Spring Boot application
         run: mvn -B clean package -DskipTests
 
+      # 4. Login to Docker Hub
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # 5. Build and push Docker image
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
@@ -43,6 +48,7 @@ jobs:
             sydivyyaa/bookmyshow-backend:latest
             sydivyyaa/bookmyshow-backend:${{ github.sha }}
 
+      # 6. Check GitHub OIDC claims
       - name: Check GitHub OIDC claims
         run: |
           TOKEN_JSON=$(curl -sS \
@@ -59,12 +65,14 @@ jobs:
           print("SUB:", d.get("sub"))
           ' "$TOKEN"
 
+      # 7. Configure AWS credentials using OIDC
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::858688938415:role/GitHubActions-BookMyShow-Deploy-Role
           aws-region: ap-south-1
 
+      # 8. Deploy application to EC2 using SSM
       - name: Deploy to EC2 using SSM
         shell: bash
         run: |
