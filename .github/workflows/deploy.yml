@@ -114,3 +114,22 @@ jobs:
 
           echo "Deployment timed out while waiting for SSM."
           exit 1
+
+      - name: Verify application health
+        shell: bash
+        run: |
+          echo "Checking BookMyShow application health..."
+
+          for i in {1..12}; do
+            if curl -fsS http://15.206.185.219/api/health; then
+              echo ""
+              echo "BookMyShow application is healthy!"
+              exit 0
+            fi
+
+            echo "Application not ready. Retrying in 10 seconds..."
+            sleep 10
+          done
+
+          echo "Health check failed!"
+          exit 1
