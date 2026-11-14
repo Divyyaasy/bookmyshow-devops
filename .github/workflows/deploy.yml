@@ -43,6 +43,22 @@ jobs:
             sydivyyaa/bookmyshow-backend:latest
             sydivyyaa/bookmyshow-backend:${{ github.sha }}
 
+      - name: Check GitHub OIDC claims
+        run: |
+          TOKEN_JSON=$(curl -sS \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com")
+          TOKEN=$(echo "$TOKEN_JSON" | python3 -c 'import json,sys; print(json.load(sys.stdin)["value"])')
+          python3 -c '
+          import sys, json, base64
+          p = sys.argv[1].split(".")[1]
+          p += "=" * (-len(p) % 4)
+          d = json.loads(base64.urlsafe_b64decode(p))
+          print("ISS:", d.get("iss"))
+          print("AUD:", d.get("aud"))
+          print("SUB:", d.get("sub"))
+          ' "$TOKEN"
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
